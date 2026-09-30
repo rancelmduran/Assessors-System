@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 
@@ -9,6 +9,9 @@ export default function OrgChartViewer() {
   const [zoom, setZoom] = useState(false);
   const triggerRef = useRef(null);
   const closeRef = useRef(null);
+  const boxRef = useRef(null); // scrollable lightbox
+  const imgRef = useRef(null);
+  const anchorRef = useRef(null); // tapped point, so the zoom keeps it under the finger
 
   useEffect(() => {
     if (!open) return;
@@ -43,6 +46,29 @@ export default function OrgChartViewer() {
     setZoom(false);
   }
 
+  function toggleZoom(e) {
+    const r = e.currentTarget.getBoundingClientRect();
+    anchorRef.current = {
+      fx: (e.clientX - r.left) / r.width,
+      fy: (e.clientY - r.top) / r.height,
+      x: e.clientX,
+      y: e.clientY,
+    };
+    setZoom((z) => !z);
+  }
+
+  // After the size changes, scroll so the tapped spot of the chart stays where it was tapped.
+  useLayoutEffect(() => {
+    const a = anchorRef.current;
+    anchorRef.current = null;
+    const box = boxRef.current;
+    const img = imgRef.current;
+    if (!a || !box || !img) return;
+    const r = img.getBoundingClientRect();
+    box.scrollLeft += r.left + a.fx * r.width - a.x;
+    box.scrollTop += r.top + a.fy * r.height - a.y;
+  }, [zoom]);
+
   return (
     <>
       <div className="org-scroll">
@@ -69,6 +95,7 @@ export default function OrgChartViewer() {
         createPortal(
           <div
             className="lightbox"
+            ref={boxRef}
             role="dialog"
             aria-modal="true"
             aria-label="Organizational chart viewer"
@@ -81,13 +108,14 @@ export default function OrgChartViewer() {
             </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              ref={imgRef}
               className={`lightbox-img${zoom ? " zoomed" : ""}`}
               src="/org-chart.png"
               alt="Organizational chart of the Municipal Assessor's Office (enlarged)"
               width={2134}
               height={1600}
               decoding="async"
-              onClick={() => setZoom((z) => !z)}
+              onClick={toggleZoom}
               title={zoom ? "Click to fit the screen" : "Click to zoom in"}
             />
           </div>,

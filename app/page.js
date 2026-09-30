@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import Motion from "./components/Motion";
 import OrgChartViewer from "./components/OrgChartViewer";
 import ScrollToTop from "./components/ScrollToTop";
+import RequirementsModal from "./components/RequirementsModal";
 
 export default function Home() {
   return (
@@ -111,6 +112,7 @@ export default function Home() {
         <div className="wrap reveal">
           <h2>Submit a Transaction / Request</h2>
           <p className="lead">No account needed. Fill out the form and your request will be sent to the office.</p>
+          <RequirementsModal />
           <div className="card form-card">
             <TransactionForm />
           </div>
