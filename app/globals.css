@@ -117,7 +117,8 @@ footer { background: var(--blue-dark); color: #fff; padding: 1.5rem 1.25rem; tex
 .lightbox-close:hover { background: var(--blue-tint); }
 .lightbox-img { touch-action: manipulation; -webkit-tap-highlight-color: transparent; display: block; margin: auto; width: auto; height: auto; max-width: 100%; max-height: calc(100vh - 5rem); max-height: calc(100dvh - 5rem); background: #fff; border-radius: 6px; cursor: zoom-in; }
 .lightbox-img.zoomed { width: 2134px; max-width: none; max-height: none; cursor: zoom-out; }
-@media (max-width: 899px) { .lightbox-img:not(.zoomed) { width: 1100px; max-width: none; max-height: none; } }
+/* Mobile: show the whole chart fitted to the screen first; tap to enlarge, then pan/pinch natively. */
+@media (max-width: 899px) { .lightbox { touch-action: pan-x pan-y pinch-zoom; } .org-open, .org-open:hover { min-width: 0; } }
 @keyframes lb-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .lightbox { animation: none; } }
 
@@ -286,4 +287,17 @@ header { border-bottom: 1px solid rgba(255,255,255,.12); }
 @media (prefers-reduced-motion: reduce) {
   .hero-content, .hero-logo-anim, .hero-particles .p { animation: none; }
   .to-top, .to-top svg, .btn, .nav-links a, .tilt, .org-scroll, .form-card { transition: none; }
+}
+
+/* Branded loading screen */
+.site-loader { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1.25rem; overflow: hidden; background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%); opacity: 1; transition: opacity .45s ease, visibility 0s linear .45s; }
+.site-loader.is-leaving { opacity: 0; visibility: hidden; pointer-events: none; }
+.site-loader-inner { display: flex; flex-direction: column; align-items: center; gap: 1.75rem; }
+.site-loader-logo { display: block; width: clamp(96px, 24vw, 160px); height: auto; }
+.site-loader-bar { position: relative; width: clamp(140px, 40vw, 220px); height: 4px; overflow: hidden; background: rgba(255,255,255,.2); border-radius: 999px; }
+.site-loader-bar span { position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: var(--gold); border-radius: 999px; animation: loader-slide 1.2s ease-in-out infinite; }
+@keyframes loader-slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+@media (prefers-reduced-motion: reduce) {
+  .site-loader { transition: none; }
+  .site-loader-bar span { width: 100%; animation: none; opacity: .85; }
 }

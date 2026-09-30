@@ -1,4 +1,5 @@
 import "./globals.css";
+import Loader from "./components/Loader";
 
 export const metadata = {
   title: "Municipal Assessor's Office - Polangui, Albay",
@@ -11,7 +12,16 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <head>
+        {/* Without JavaScript the loader could never dismiss itself, so hide it. */}
+        <noscript>
+          <style>{".site-loader{display:none!important}"}</style>
+        </noscript>
+      </head>
+      <body>
+        <Loader />
+        {children}
+      </body>
     </html>
   );
 }
