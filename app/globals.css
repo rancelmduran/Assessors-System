@@ -301,3 +301,15 @@ header { border-bottom: 1px solid rgba(255,255,255,.12); }
   .site-loader { transition: none; }
   .site-loader-bar span { width: 100%; animation: none; opacity: .85; }
 }
+
+/* Custom scrollbar — native scrolling, styling only (royal blue + gold) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--blue-dark); }
+::-webkit-scrollbar-thumb { background: var(--gold); border: 2px solid var(--blue-dark); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #ffcb2e; }
+::-webkit-scrollbar-thumb:active { background: #d9a204; }
+::-webkit-scrollbar-corner { background: var(--blue-dark); }
+/* Firefox (and any engine without ::-webkit-scrollbar); Chromium keeps the rules above so the hover state works */
+@supports not selector(::-webkit-scrollbar) {
+  html, .org-scroll, .lightbox, .req-body, .nav-links, .nav-panel { scrollbar-width: thin; scrollbar-color: var(--gold) var(--blue-dark); }
+}
