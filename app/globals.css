@@ -596,9 +596,10 @@ header.is-scrolled::before { background-color: rgba(14,39,80,.95); }
     -webkit-backdrop-filter: blur(16px) saturate(160%);
     backdrop-filter: blur(16px) saturate(160%);
     transform: translateX(-50%);
-    transition: transform .35s ease, opacity .3s ease, visibility .35s;
+    transition: transform .4s cubic-bezier(.4, 0, .2, 1), visibility 0s linear 0s;
   }
-  .dock.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: translate(-50%, calc(100% + env(safe-area-inset-bottom, 0px) + 1.5rem)); }
+  /* Slides fully off the bottom edge (no fade); visibility flips only after the slide finishes */
+  .dock.is-hidden { visibility: hidden; pointer-events: none; transform: translate(-50%, calc(100% + env(safe-area-inset-bottom, 0px) + 1.5rem)); transition: transform .4s cubic-bezier(.4, 0, .2, 1), visibility 0s linear .4s; }
   .dock a {
     position: relative;
     flex: 0 1 44px;
@@ -641,7 +642,7 @@ header.is-scrolled::before { background-color: rgba(14,39,80,.95); }
 
   /* Keep the scroll-to-top button clear of the dock */
   .to-top, .to-top:hover { bottom: calc(max(.75rem, env(safe-area-inset-bottom)) + 4.25rem); }
-  .to-top { transition: opacity .25s ease, transform .25s ease, visibility .25s, background-color .2s ease, bottom .35s ease; }
+  .to-top { transition: opacity .25s ease, transform .25s ease, visibility .25s, background-color .2s ease, bottom .4s cubic-bezier(.4, 0, .2, 1); }
   html.dock-hidden .to-top, html.dock-hidden .to-top:hover { bottom: max(.75rem, env(safe-area-inset-bottom)); }
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -651,5 +652,12 @@ header.is-scrolled::before { background-color: rgba(14,39,80,.95); }
   .dock { background: var(--blue-dark); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dock, .dock a, .dock a::after, .to-top { transition: none !important; }
+  .dock, .dock.is-hidden, .dock a, .dock a::after, .to-top { transition: none !important; }
+}
+
+/* Mobile footer: one aligned column, same structure for Email / Facebook / Contact (desktop unchanged) */
+@media (max-width: 760px) {
+  .footer-contact { grid-template-columns: minmax(0, 1fr); justify-items: stretch; gap: 1rem; width: 100%; max-width: 340px; margin-inline: auto; }
+  .footer-contact li { justify-content: flex-start; }
+  .footer-item { flex: 1 1 auto; min-width: 0; }
 }
