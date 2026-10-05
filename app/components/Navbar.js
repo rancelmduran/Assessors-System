@@ -102,14 +102,23 @@ export default function Navbar({ showAnnouncements = false }) {
     return () => io.disconnect();
   }, [links]);
 
-  // Mobile dock: hide while scrolling down, show while scrolling up / at the top. Class toggles only (no re-renders),
-  // one rAF-throttled passive listener, attached only on mobile widths.
+  // Mobile dock: hides only after meaningful downward scrolling, shows again after a short upward scroll, and a
+  // cooldown stops rapid toggling. Class toggles only (no re-renders), one rAF-throttled passive listener,
+  // attached only on mobile widths.
   useEffect(() => {
     const dock = dockRef.current;
     if (!dock) return;
     const root = document.documentElement;
     const mq = window.matchMedia("(max-width: 899px)");
-    let last = window.scrollY;
+    const TOP_ZONE = 24; // always visible this close to the top
+    const HIDE_AFTER = 120; // px scrolled down (in one direction) before hiding
+    const SHOW_AFTER = 48; // px scrolled up (in one direction) before showing
+    const MIN_HIDE_Y = 160; // never hide before the page has really been scrolled
+    const COOLDOWN = 700; // ms, roughly the slide duration: no re-toggle mid-animation
+    let lastY = window.scrollY;
+    let anchor = lastY; // scroll position where the current direction started
+    let dir = 0;
+    let lastToggle = 0;
     let raf = 0;
     let hidden = false;
     let typing = false;
@@ -117,6 +126,7 @@ export default function Navbar({ showAnnouncements = false }) {
     const set = (h) => {
       if (h === hidden) return;
       hidden = h;
+      lastToggle = performance.now();
       dock.classList.toggle("is-hidden", h);
       root.classList.toggle("dock-hidden", h);
     };
@@ -124,17 +134,29 @@ export default function Navbar({ showAnnouncements = false }) {
       raf = 0;
       if (typing) return;
       const y = Math.max(0, window.scrollY);
-      const atBottom = y + window.innerHeight >= document.documentElement.scrollHeight - 4;
-      if (y <= 24) {
+      const dy = y - lastY;
+      lastY = y;
+
+      if (y <= TOP_ZONE) {
         set(false);
-      } else if (atBottom) {
-        set(true); // never cover the last bit of the page
-      } else if (Math.abs(y - last) >= 8) {
-        set(y > last);
-      } else {
+        anchor = y;
         return;
       }
-      last = y;
+      if (y + window.innerHeight >= document.documentElement.scrollHeight - 4) {
+        set(true); // never cover the last bit of the page
+        anchor = y;
+        return;
+      }
+      if (dy === 0) return;
+      const d = dy > 0 ? 1 : -1;
+      if (d !== dir) {
+        dir = d;
+        anchor = y - dy; // direction changed: measure from where it changed
+      }
+      if (performance.now() - lastToggle < COOLDOWN) return;
+      const travel = Math.abs(y - anchor);
+      if (d > 0 && y > MIN_HIDE_Y && travel >= HIDE_AFTER) set(true);
+      else if (d < 0 && travel >= SHOW_AFTER) set(false);
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
@@ -162,7 +184,8 @@ export default function Navbar({ showAnnouncements = false }) {
     const attach = () => {
       detach();
       if (!mq.matches) return;
-      last = window.scrollY;
+      lastY = anchor = window.scrollY;
+      dir = 0;
       window.addEventListener("scroll", onScroll, { passive: true });
       document.addEventListener("focusin", onFocusIn);
       document.addEventListener("focusout", onFocusOut);
