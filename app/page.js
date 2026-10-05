@@ -1,13 +1,17 @@
 import Image from "next/image";
 import { office } from "../lib/config";
-import TransactionForm from "./components/TransactionForm";
 import Navbar from "./components/Navbar";
 import Motion from "./components/Motion";
 import OrgChartViewer from "./components/OrgChartViewer";
 import ScrollToTop from "./components/ScrollToTop";
-import RequirementsModal from "./components/RequirementsModal";
+import TransactionModal from "./components/TransactionModal";
+import OfficeMapViewer from "./components/OfficeMapViewer";
+import CitizensCharterViewer from "./components/CitizensCharterViewer";
+import AnnouncementsCarousel from "./components/AnnouncementsCarousel";
+import { getAnnouncementImages } from "../lib/announcements";
 
 export default function Home() {
+  const announcements = getAnnouncementImages();
   return (
     <>
       <Motion />
@@ -20,7 +24,7 @@ export default function Home() {
               <div>{office.locality}</div>
             </div>
           </div>
-          <Navbar />
+          <Navbar showAnnouncements={announcements.length > 0} />
         </div>
       </header>
 
@@ -58,7 +62,7 @@ export default function Home() {
               Welcome to the official website of the Municipal Assessor&apos;s Office. Learn about the office and submit your transaction or request online, no account needed.
             </p>
             <div className="hero-cta">
-              <a className="btn btn-primary" href="#transaction">Submit a Transaction / Request</a>
+              <TransactionModal />
               <a className="btn btn-ghost" href="#about">Learn More</a>
             </div>
           </div>
@@ -72,10 +76,10 @@ export default function Home() {
 
       <section id="about">
         <div className="deco deco-logo" data-parallax="0.12" aria-hidden="true" />
-        <div className="wrap reveal">
-          <h2>About the Office</h2>
+        <div className="wrap">
+          <h2 className="reveal reveal-fade">About the Office</h2>
           {office.intro.map((text, i) => (
-            <p className="lead" key={i}>{text}</p>
+            <p className="lead reveal" style={{ "--reveal-delay": `${100 + i * 100}ms` }} key={i}>{text}</p>
           ))}
         </div>
       </section>
@@ -96,30 +100,104 @@ export default function Home() {
               <p>{office.vision}</p>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section id="org-chart">
-        <div className="wrap org reveal">
-          <h2>Organizational Chart</h2>
-          <p className="org-hint">Click or tap the chart to enlarge it.</p>
-          <OrgChartViewer />
-        </div>
-      </section>
-
-      <section id="transaction">
-        <div className="deco deco-c" data-parallax="0.12" aria-hidden="true" />
-        <div className="wrap reveal">
-          <h2>Submit a Transaction / Request</h2>
-          <p className="lead">No account needed. Fill out the form and your request will be sent to the office.</p>
-          <RequirementsModal />
-          <div className="card form-card">
-            <TransactionForm />
+          <div className="reveal" style={{ "--reveal-delay": "240ms" }}>
+            <div className="card tilt" data-tilt>
+              <h2>Mandate</h2>
+              <p>{office.mandate}</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <footer>&copy; {new Date().getFullYear()} {office.name}, {office.locality}</footer>
+      <section id="citizens-charter">
+        <div className="wrap">
+          <h2 className="reveal reveal-fade">Citizen&apos;s Charter</h2>
+          <p className="lead reveal" style={{ "--reveal-delay": "100ms" }}>
+            The Citizen&apos;s Charter lists the services of the office, the requirements for each, and the standard processing time.
+          </p>
+          <div className="reveal" style={{ "--reveal-delay": "200ms" }}>
+            <CitizensCharterViewer />
+          </div>
+        </div>
+      </section>
+
+      <section id="office-location">
+        <div className="wrap office-map">
+          <h2 className="reveal reveal-fade">Office Location</h2>
+          <p className="lead reveal" style={{ "--reveal-delay": "100ms" }}>{office.address}</p>
+          <div className="reveal" style={{ "--reveal-delay": "200ms" }}>
+            <OfficeMapViewer />
+          </div>
+        </div>
+      </section>
+
+      <section id="org-chart">
+        <div className="wrap org">
+          <h2 className="reveal reveal-fade">Organizational Chart</h2>
+          <p className="org-hint reveal" style={{ "--reveal-delay": "100ms" }}>Click or tap the chart to enlarge it.</p>
+          <div className="reveal" style={{ "--reveal-delay": "200ms" }}>
+            <OrgChartViewer />
+          </div>
+        </div>
+      </section>
+
+      {announcements.length > 0 && (
+        <section id="announcements">
+          <div className="wrap">
+            <h2 className="reveal reveal-fade">Announcements</h2>
+            <div className="reveal" style={{ "--reveal-delay": "150ms" }}>
+              <AnnouncementsCarousel images={announcements} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      <footer>
+        <div className="wrap">
+          <div className="footer-main">
+          <Image className="footer-logo" src="/masso-logo.png" alt="Municipal Assessor's Office Polangui logo" width={104} height={104} />
+          <ul className="footer-contact">
+            <li>
+              <span className="footer-icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+                  <path d="M22 6l-10 7L2 6" />
+                </svg>
+              </span>
+              <span className="footer-item">
+                <span className="footer-label">Email</span>
+                <a className="footer-link" href={`mailto:${office.contact.email}`}>{office.contact.email}</a>
+              </span>
+            </li>
+            <li>
+              <span className="footer-icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                </svg>
+              </span>
+              <span className="footer-item">
+                <span className="footer-label">Facebook</span>
+                <a className="footer-link" href={office.contact.facebook} target="_blank" rel="noopener noreferrer">Visit our Facebook page</a>
+              </span>
+            </li>
+            <li>
+              <span className="footer-icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                </svg>
+              </span>
+              <span className="footer-item">
+                <span className="footer-label">Contact</span>
+                <a className="footer-link" href={office.contact.phoneHref}>{office.contact.phone}</a>
+              </span>
+            </li>
+          </ul>
+          </div>
+          <p className="footer-credit">
+            <span>&copy; {new Date().getFullYear()} {office.name}, {office.locality}.</span> <span>All rights reserved.</span>
+          </p>
+        </div>
+      </footer>
       <ScrollToTop />
     </>
   );
