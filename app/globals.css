@@ -436,7 +436,7 @@ header.is-scrolled::before { background-color: rgba(14,39,80,.95); }
 .nav-links a[aria-current="true"] { color: #fff; background: transparent; box-shadow: none; }
 .nav-links a[aria-current="true"]::after { opacity: .9; width: 18px; }
 
-.nav-login .ico-lines { display: none; }
+.nav-login .ico-gear { display: none; }
 
 @media (min-width: 900px) {
   header { --nav-pad: clamp(1.25rem, 3vw, 2.5rem); padding-inline: var(--nav-pad); }
