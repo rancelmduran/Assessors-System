@@ -934,3 +934,7 @@ header.is-scrolled::before { background-color: rgba(14,39,80,.95); }
   .pf-card { background: var(--blue-dark); -webkit-backdrop-filter: none; backdrop-filter: none; }
   .pf-backdrop.is-open { background: rgba(8,20,45,.85); }
 }
+
+.tx-verification { min-width: 0; padding: .85rem; border: 1px solid var(--line); border-radius: 12px; background: var(--blue-tint); }
+.tx-verification p { margin: 0 0 .65rem; font-size: .9rem; }
+.tx-verification button { margin-top: .65rem; min-height: 40px; font-size: .85rem; }

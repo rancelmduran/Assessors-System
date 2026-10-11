@@ -14,43 +14,48 @@ const exists = async relative => stat(path.join(root, relative)).then(() => true
   throw error;
 });
 
-test('release has no office, login, API, database, GIS, secret or migration files', async () => {
-  for (const relative of ['app/office', 'app/employee', 'app/api', 'db', 'data', 'middleware.js', 'lib/session.js', 'lib/db.js', 'app/components/LoginModal.js', 'app/components/TransactionForm.js', 'app/components/TransactionModal.js']) {
+test('release has no office, login, database, GIS, secret or migration files', async () => {
+  for (const relative of ['app/office', 'app/employee', 'db', 'data', 'middleware.js', 'lib/session.js', 'lib/db.js', 'app/components/LoginModal.js']) {
     assert.equal(await exists(relative), false, relative);
   }
   for (const file of await readdir(root)) {
     assert.equal(/^\.env|\.(?:pem|key|p12|pfx|dump|zip)$/i.test(file), false, 'Private file in release');
   }
   assert.equal(await exists('public/office-forms'), false);
+  assert.deepEqual(await readdir(path.join(root, 'app/api')), ['transaction']);
+  assert.deepEqual(await readdir(path.join(root, 'app/api/transaction')), ['route.js']);
 });
 
-test('dependency graph contains no office database, mail, document or GIS libraries', async () => {
+test('dependency graph contains no office database, document or GIS libraries', async () => {
   const pkg = JSON.parse(await text('package.json'));
-  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['next', 'react', 'react-dom']);
+  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['next', 'nodemailer', 'react', 'react-dom']);
   const lock = JSON.parse(await text('package-lock.json'));
   for (const name of Object.keys(lock.packages)) {
-    assert.equal(/(?:^|\/)node_modules\/(?:pg|pg-pool|bcryptjs|jose|jszip|mammoth|nodemailer|maplibre-gl)(?:\/|$)/.test(name), false, name);
+    assert.equal(/(?:^|\/)node_modules\/(?:pg|pg-pool|bcryptjs|jose|jszip|mammoth|maplibre-gl)(?:\/|$)/.test(name), false, name);
   }
 });
 
 test('public content retains the approved design and clearly explains submission availability', async () => {
   const page = await text('app/page.js');
   for (const component of ['HeroSeal', 'AnnouncementPosts', 'OrgChartViewer', 'OfficeMapViewer', 'CitizensCharterViewer', 'PublicServices']) assert.ok(page.includes(`<${component}`), component);
-  assert.ok(page.includes('Online submissions are not available yet.'));
+  assert.ok(page.includes('Send a request directly to the office by email.'));
+  assert.ok(page.includes('<TransactionModal'));
+  assert.ok((await text('app/components/TransactionForm.js')).includes('public_request'));
+  assert.ok((await text('app/components/TransactionForm.js')).includes('disabled={!token'));
   for (const relative of ['app/page.js', 'app/components/Navbar.js', 'app/components/PublicServices.js']) {
     const content = await text(relative);
-    assert.doesNotMatch(content, /LoginModal|TransactionModal|\/api\/(?:auth|transaction)|\/employee\/login/);
+    assert.doesNotMatch(content, /LoginModal|\/api\/auth|\/employee\/login/);
   }
 });
 
-test('actual production build contains only the public page and framework not-found page', async () => {
+test('actual build contains only the public page, protected public submission API and framework not-found page', async () => {
   const pages = JSON.parse(await text('.next/server/app-paths-manifest.json'));
-  assert.deepEqual(Object.keys(pages).sort(), ['/_not-found/page', '/page']);
+  assert.deepEqual(Object.keys(pages).sort(), ['/_not-found/page', '/api/transaction/route', '/page']);
   const routes = JSON.parse(await text('.next/routes-manifest.json'));
   assert.equal(routes.dynamicRoutes.length, 0);
 });
 
-test('built public release serves public assets and rejects every internal/API request', async t => {
+test('built release serves public assets, fails closed without spam protection and rejects internal APIs', async t => {
   const reservation = createServer();
   await new Promise((resolve, reject) => {
     reservation.once('error', reject);
@@ -58,7 +63,7 @@ test('built public release serves public assets and rejects every internal/API r
   });
   const port = reservation.address().port;
   await new Promise((resolve, reject) => reservation.close(error => error ? reject(error) : resolve()));
-  const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'start', '--hostname', '127.0.0.1', '--port', String(port)], {
+  const child = spawn(process.execPath, ['--import=./tests/forbid-external-services.mjs', 'node_modules/next/dist/bin/next', 'start', '--hostname', '127.0.0.1', '--port', String(port)], {
     cwd:root, windowsHide:true, stdio:['ignore', 'pipe', 'pipe'],
     env:{PATH:process.env.PATH, SystemRoot:process.env.SystemRoot, TEMP:process.env.TEMP, TMP:process.env.TMP, NODE_ENV:'production', NEXT_TELEMETRY_DISABLED:'1'},
   });
@@ -85,10 +90,10 @@ test('built public release serves public assets and rejects every internal/API r
     await t.test('homepage content, contact details, security headers and removed controls', () => {
       assert.equal(home.status, 200);
       assert.ok(html.includes('Municipal Assessor'));
-      assert.ok(html.includes('Online submissions are not available yet.'));
+      assert.ok(html.includes('Send a request directly to the office by email.'));
       assert.ok(html.includes('0927-828-1263'));
       assert.ok(html.includes('Monday to Thursday'));
-      assert.doesNotMatch(html, /Employee \/ Admin login|Submit a Transaction|Submit request|<form|type="file"|\/employee\/login/);
+      assert.doesNotMatch(html, /Employee \/ Admin login|<form|type="file"|\/employee\/login/);
       assert.equal(home.headers.get('x-content-type-options'), 'nosniff');
       assert.equal(home.headers.get('x-frame-options'), 'SAMEORIGIN');
       assert.match(home.headers.get('content-security-policy'), /frame-ancestors 'self'/);
@@ -97,7 +102,7 @@ test('built public release serves public assets and rejects every internal/API r
     });
     const internal = [
       '/office', '/office/mapping', '/office/frontdesk', '/office/files', '/office/document-test', '/employee/login',
-      '/api/auth/login', '/api/auth/logout', '/api/transaction', '/api/mapping', '/api/mapping/search', '/api/mapping/parcels/anything',
+      '/api/auth/login', '/api/auth/logout', '/api/mapping', '/api/mapping/search', '/api/mapping/parcels/anything',
       '/api/frontdesk/documents', '/api/frontdesk/documents/anything', '/api/editor-documents', '/api/editor-documents/anything', '/api/profile', '/api/profile/avatar', '/api/notifications',
       '/.env.local', '/db/schema.sql', '/data/mapping/manifest.json', '/office-forms/office-template.docx', '/scripts/initialize-supabase.mjs', '/%6fffice/mapping',
     ];
@@ -110,6 +115,12 @@ test('built public release serves public assets and rejects every internal/API r
       const response = await request(relative, {method:'POST', headers:{'content-type':'application/json'}, body:'{}'});
       await response.arrayBuffer();
       assert.ok([404, 405].includes(response.status), `Unexpected status ${response.status}`);
+    });
+    await t.test('public submission API refuses unconfigured email/protection and unsupported GET', async () => {
+      const get = await request('/api/transaction'); await get.arrayBuffer(); assert.equal(get.status, 405);
+      const response = await request('/api/transaction', {method:'POST',headers:{origin:'https://assessors-system.vercel.app','content-type':'application/json'},body:'{}'});
+      assert.equal(response.status,503); assert.equal(response.headers.get('cache-control'),'no-store');
+      assert.doesNotMatch(await response.text(),/SMTP_PASS|UPSTASH|TURNSTILE_SECRET|password/i);
     });
     const assets = [
       '/favicon.png', '/masso-logo.png', '/org-chart.png', '/citizens-charter/Citizen_Charter_Assessor_s_Office.pdf',
@@ -129,7 +140,7 @@ test('built public release serves public assets and rejects every internal/API r
       const response = await request(relative);
       const body = await response.text();
       assert.equal(response.status, 200);
-      assert.doesNotMatch(body, /\/api\/(?:auth\/login|transaction|mapping)|Employee \/ Admin login/);
+      assert.doesNotMatch(body, /\/api\/(?:auth\/login|mapping)|Employee \/ Admin login/);
     });
   } finally {
     if (child.exitCode === null) child.kill();

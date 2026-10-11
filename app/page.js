@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { office } from "../lib/config";
+import TransactionModal from "./components/TransactionModal";
 import Navbar from "./components/Navbar";
 import Motion from "./components/Motion";
 import HeroSeal from "./components/HeroSeal";
@@ -72,10 +73,10 @@ export default function Home() {
               Welcome to the official website of the Municipal Assessor&apos;s Office. Find services and requirements, read public notices, and plan your visit to the office.
             </p>
             <div className="hero-cta">
-              <a className="btn btn-primary" href="#office-location">Contact the office</a>
+              <TransactionModal />
               <a className="btn btn-ghost" href="#services">Explore Services</a>
             </div>
-            <p className={styles.submissionNotice}>Online submissions are not available yet. Please contact or visit the office for requests.</p>
+            <p className={styles.submissionNotice}>Send a request directly to the office by email. No account needed; a security check helps protect the service.</p>
           </div>
           <div className="hero-logo-wrap" data-parallax="0.08">
             <HeroSeal />
@@ -163,7 +164,7 @@ export default function Home() {
         <div className={`wrap ${styles.faqLayout}`}>
           <div className={styles.sectionHeading}><p className={styles.eyebrow}>A FEW HELPFUL ANSWERS</p><h2 id="faq-title">Before you get started</h2><p>Quick answers to common questions about using this website.</p><a className={styles.textLink} href="#office-location">Still have a question? Contact us <span aria-hidden="true">↗</span></a></div>
           <div className={styles.faqList}>
-            <details><summary>Can I submit a request online?</summary><p>Online submissions are not available yet. Please <a href="#office-location">contact or visit the office</a> for help with your transaction or request. No account is needed to browse this website.</p></details>
+            <details><summary>Can I submit a request online?</summary><p>Yes. Select “Submit a Transaction / Request” or choose a service to email your request and supporting documents to the office. No account is needed. Complete the security check before submitting; request limits help prevent spam. Sending a request does not confirm approval or completion.</p></details>
             <details><summary>Where can I find the requirements?</summary><p>Choose a service in <a href="#services">Services & Requirements</a> and select “View requirements” to read its official PDF. The Citizen&apos;s Charter also describes the office&apos;s services.</p></details>
             <details><summary>What documents should I bring?</summary><p>Read the requirements for your service and contact the office to confirm what you need before visiting.</p></details>
             <details><summary>Where can I check processing times and fees?</summary><p>Refer to the <a href="#citizens-charter">Citizen&apos;s Charter</a> for official service information. Contact the office to clarify which requirements or fees apply to your transaction.</p></details>

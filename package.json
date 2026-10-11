@@ -6,12 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test tests/public-release.test.mjs"
+    "test": "node --import=./tests/forbid-external-services.mjs --test tests/*.test.mjs"
   },
   "dependencies": {
     "next": "15.5.27",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "nodemailer": "10.0.16"
   },
   "engines": {
     "node": "24.x"

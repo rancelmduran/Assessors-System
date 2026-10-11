@@ -1,3 +1,4 @@
+import TransactionModal from "./TransactionModal";
 import RequirementsModal from "./RequirementsModal";
 import PublicIcon from "./PublicIcon";
 import styles from "../PublicHome.module.css";
@@ -23,7 +24,7 @@ export default function PublicServices() {
             <p>{service.description}</p>
             <div className={styles.serviceActions}>
               <RequirementsModal itemId={service.id} label="View requirements" buttonClassName={styles.requirementButton} wrapperClassName={styles.requirementAction} />
-              <a href="#office-location" className={styles.requestButton}>Contact the office</a>
+              <TransactionModal label="Submit request" className={styles.requestButton} purpose={service.name} />
             </div>
           </article>
         );
