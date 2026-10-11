@@ -1,21 +1,24 @@
 {
-  "name": "polangui-assessor-web",
+  "name": "polangui-assessor-public",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node --test tests/public-release.test.mjs"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "jose": "^5.9.6",
-    "next": "^15.0.0",
-    "nodemailer": "^6.9.16",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "next": "15.5.27",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "engines": {
-    "node": ">=18.18.0"
+    "node": "24.x"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "^8.5.24"
+    }
   }
 }

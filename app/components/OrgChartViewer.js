@@ -1,126 +1,78 @@
 "use client";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import Image from "next/image";
+import { useState } from "react";
+import { officeHead, officeUnits } from "../../lib/organization";
+import PublicIcon from "./PublicIcon";
+import styles from "./OrgChartViewer.module.css";
 
-// Clickable org chart thumbnail + in-page fullscreen viewer (no new tab, no navigation).
+function Portrait({ person }) {
+  const { x, y, size } = person.portrait;
+  return <span className={styles.portrait} aria-hidden="true" style={{
+    backgroundSize: `${1824 / size * 100}% ${1368 / size * 100}%`,
+    backgroundPosition: `${(x - size / 2) / (1824 - size) * 100}% ${(y - size / 2) / (1368 - size) * 100}%`,
+  }} />;
+}
+
 export default function OrgChartViewer() {
-  const [open, setOpen] = useState(false);
-  const [zoom, setZoom] = useState(false);
-  const triggerRef = useRef(null);
-  const closeRef = useRef(null);
-  const boxRef = useRef(null); // scrollable lightbox
-  const imgRef = useRef(null);
-  const anchorRef = useRef(null); // tapped point, so the zoom keeps it under the finger
-
-  useEffect(() => {
-    if (!open) return;
-    const body = document.body;
-    const prevOverflow = body.style.overflow;
-    const prevPadding = body.style.paddingRight;
-    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
-    body.style.overflow = "hidden"; // lock background scroll
-    if (scrollbar > 0) body.style.paddingRight = `${scrollbar}px`; // avoid layout shift
-    closeRef.current?.focus();
-
-    const onKey = (e) => {
-      if (e.key === "Escape") {
-        setOpen(false);
-        setZoom(false);
-      } else if (e.key === "Tab") {
-        e.preventDefault(); // the close button is the only focusable control
-        closeRef.current?.focus();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      body.style.overflow = prevOverflow;
-      body.style.paddingRight = prevPadding;
-      triggerRef.current?.focus();
-    };
-  }, [open]);
-
-  function close() {
-    setOpen(false);
-    setZoom(false);
-  }
-
-  function toggleZoom(e) {
-    const r = e.currentTarget.getBoundingClientRect();
-    anchorRef.current = {
-      fx: (e.clientX - r.left) / r.width,
-      fy: (e.clientY - r.top) / r.height,
-      x: e.clientX,
-      y: e.clientY,
-    };
-    setZoom((z) => !z);
-  }
-
-  // After the size changes, scroll so the tapped spot of the chart stays where it was tapped.
-  useLayoutEffect(() => {
-    const a = anchorRef.current;
-    anchorRef.current = null;
-    const box = boxRef.current;
-    const img = imgRef.current;
-    if (!a || !box || !img) return;
-    const r = img.getBoundingClientRect();
-    box.scrollLeft += r.left + a.fx * r.width - a.x;
-    box.scrollTop += r.top + a.fy * r.height - a.y;
-  }, [zoom]);
+  const [expanded, setExpanded] = useState(() => Object.fromEntries(officeUnits.map((unit) => [unit.id, true])));
+  const setAll = (isOpen) => setExpanded(Object.fromEntries(officeUnits.map((unit) => [unit.id, isOpen])));
 
   return (
-    <>
-      <div className="org-scroll">
-        <button
-          type="button"
-          className="org-open"
-          ref={triggerRef}
-          onClick={() => setOpen(true)}
-          aria-label="Open the organizational chart in a full-screen viewer"
-        >
-          <Image
-            className="org-img"
-            src="/org-chart.png"
-            alt="Organizational chart of the Municipal Assessor's Office"
-            width={2134}
-            height={1600}
-            sizes="(max-width: 899px) 640px, 1040px"
-            quality={90}
-          />
-        </button>
+    <div className={styles.organization}>
+      <div className={styles.toolbar}>
+        <div className={styles.summary}>
+          <span><strong>{1 + officeUnits.reduce((total, unit) => total + unit.people.length, 0)}</strong> team members</span>
+          <span><strong>{officeUnits.length}</strong> office units</span>
+        </div>
+        <div className={styles.actions} role="group" aria-label="Organizational chart controls">
+          <button type="button" className={styles.action} onClick={() => setAll(true)}>Expand all units</button>
+          <button type="button" className={styles.action} onClick={() => setAll(false)}>Collapse all units</button>
+        </div>
       </div>
 
-      {open &&
-        createPortal(
-          <div
-            className="lightbox"
-            ref={boxRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Organizational chart viewer"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) close();
-            }}
-          >
-            <button type="button" className="lightbox-close" ref={closeRef} onClick={close} aria-label="Close organizational chart viewer">
-              <span aria-hidden="true">&times;</span> Close
-            </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              ref={imgRef}
-              className={`lightbox-img${zoom ? " zoomed" : ""}`}
-              src="/org-chart.png"
-              alt="Organizational chart of the Municipal Assessor's Office (enlarged)"
-              width={2134}
-              height={1600}
-              decoding="async"
-              onClick={toggleZoom}
-              title={zoom ? "Click to fit the screen" : "Click to zoom in"}
-            />
-          </div>,
-          document.body
-        )}
-    </>
+      <ul className={styles.tree} aria-label="Municipal Assessor's Office organizational structure">
+        <li>
+          <article className={styles.leadership} aria-labelledby="office-head-name">
+            <div className={styles.leaderPortrait}><Portrait person={officeHead} /></div>
+            <div className={styles.leaderInfo}>
+              <p className={styles.eyebrow}>OFFICE LEADERSHIP</p>
+              <h3 id="office-head-name" className={styles.leaderName}>{officeHead.name}</h3>
+              <span className={styles.credentials}>{officeHead.credentials}</span>
+              <p className={styles.leaderPosition}>{officeHead.position}</p>
+            </div>
+            <span className={styles.leaderEmblem} aria-hidden="true"><PublicIcon name="property" width="68" height="68" /></span>
+          </article>
+
+          <div className={styles.branchGroup}>
+            <p className={styles.branchLabel}>OUR OFFICE UNITS</p>
+            <ul className={styles.branches} aria-label="Office units">
+              {officeUnits.map((unit, index) => <li key={unit.id} className={styles.unit} data-unit={unit.id}>
+                <details className={styles.unitPanel} open={expanded[unit.id]} onToggle={(e) => {
+                  const isOpen = e.currentTarget.open;
+                  setExpanded((previous) => previous[unit.id] === isOpen ? previous : { ...previous, [unit.id]: isOpen });
+                }}>
+                  <summary className={styles.unitHeading}>
+                    <span className={styles.unitIcon}><PublicIcon name={unit.icon} width="23" height="23" /></span>
+                    <span className={styles.unitTitle}>
+                      <span className={styles.unitMeta}>UNIT {String(index + 1).padStart(2, "0")} <span aria-hidden="true">·</span> {unit.people.length} {unit.people.length === 1 ? "member" : "members"}</span>
+                      <h4 className={styles.unitName}>{unit.name}</h4>
+                    </span>
+                    <span className={styles.disclosure} aria-hidden="true"><span className={styles.chevron} /></span>
+                  </summary>
+                  <ul className={styles.people}>
+                    {unit.people.map((person) => <li key={person.name}>
+                      <article className={styles.person}>
+                        <Portrait person={person} />
+                        <div className={styles.personText}><h5 className={styles.personName}>{person.name}</h5><p className={styles.position}>{person.position}</p></div>
+                      </article>
+                    </li>)}
+                  </ul>
+                </details>
+              </li>)}
+            </ul>
+          </div>
+        </li>
+      </ul>
+      <p className={styles.hint}>Select a unit to explore its team.</p>
+    </div>
   );
 }

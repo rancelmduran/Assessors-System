@@ -1,17 +1,20 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import styles from "./Navbar.module.css";
 
 const baseLinks = [
+  { href: "#services", label: "Services", icon: "services" },
   { href: "#about", label: "About", icon: "about" },
-  { href: "#mission-vision", label: "Mission / Vision", icon: "vision" },
-  { href: "#citizens-charter", label: "Citizen's Charter", icon: "charter" },
-  { href: "#office-location", label: "Location", icon: "location" },
-  { href: "#org-chart", label: "Employees", icon: "employees" },
+  { href: "#citizens-charter", label: "Charter", icon: "charter" },
+  { href: "#faq", label: "FAQs", icon: "faq" },
+  { href: "#office-location", label: "Visit us", icon: "location" },
 ];
-const announcementsLink = { href: "#announcements", label: "Announcements", icon: "announcements" };
+const announcementsLink = { href: "#announcements", label: "Notices", icon: "announcements" };
 
 // Inline icons for the mobile dock (no icon library needed).
 const ICONS = {
+  services: <><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></>,
+  faq: <><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4M12 17h.01" /></>,
   about: (
     <>
       <circle cx="12" cy="12" r="10" />
@@ -53,22 +56,17 @@ const ICONS = {
 
 export default function Navbar({ showAnnouncements = false }) {
   // The shortcut only exists when the Announcements section is rendered (it is hidden when there are no images).
-  const links = useMemo(() => (showAnnouncements ? [...baseLinks, announcementsLink] : baseLinks), [showAnnouncements]);
+  const links = useMemo(() => (showAnnouncements ? [baseLinks[0], announcementsLink, ...baseLinks.slice(1)] : baseLinks), [showAnnouncements]);
+  const dockLinks = links.filter((link) => ["services", "announcements", "faq", "location"].includes(link.icon));
   const [menuOpen, setMenuOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
   const navRef = useRef(null);
   const dockRef = useRef(null);
   const [active, setActive] = useState("");
 
-  // Close the mobile menu / login panel on outside click or Escape.
+  // Close the mobile menu on outside click or Escape.
   useEffect(() => {
-    if (!menuOpen && !loginOpen) return;
-    const closeAll = () => {
-      setMenuOpen(false);
-      setLoginOpen(false);
-    };
+    if (!menuOpen) return;
+    const closeAll = () => setMenuOpen(false);
     const onDown = (e) => {
       if (navRef.current && !navRef.current.contains(e.target)) closeAll();
     };
@@ -83,7 +81,7 @@ export default function Navbar({ showAnnouncements = false }) {
       document.removeEventListener("touchstart", onDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, [menuOpen, loginOpen]);
+  }, [menuOpen]);
 
   // Highlight the link of the section currently in view (state changes only when the section changes).
   useEffect(() => {
@@ -212,30 +210,6 @@ export default function Navbar({ showAnnouncements = false }) {
     };
   }, []);
 
-  // Uses the existing authentication endpoint: POST /api/auth/login
-  async function onSubmit(e) {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    const data = Object.fromEntries(new FormData(e.currentTarget));
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        window.location.href = "/office";
-        return;
-      }
-      const json = await res.json().catch(() => ({}));
-      setError(json.error || "Login failed.");
-    } catch {
-      setError("Login failed. Please try again.");
-    }
-    setBusy(false);
-  }
-
   return (
     <>
     <nav className="nav" ref={navRef} aria-label="Main navigation">
@@ -247,38 +221,6 @@ export default function Navbar({ showAnnouncements = false }) {
         ))}
       </div>
 
-      <div className="nav-tools">
-        <button
-          type="button"
-          className="nav-btn nav-login"
-          aria-label="Employee / Admin login"
-          aria-expanded={loginOpen}
-          onClick={() => {
-            setLoginOpen((o) => !o);
-            setMenuOpen(false);
-          }}
-        >
-          <svg className="ico-lines" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <path d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
-          <svg className="ico-gear" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
-        </button>
-        {loginOpen && (
-          <div className="nav-panel" role="dialog" aria-label="Employee / Admin Login">
-            <strong>Employee / Admin Login</strong>
-            <form onSubmit={onSubmit}>
-              <label>Username<input name="username" required autoFocus autoComplete="username" /></label>
-              <label>Password<input name="password" type="password" required autoComplete="current-password" /></label>
-              <button disabled={busy}>{busy ? "Signing in..." : "Sign in"}</button>
-              {error && <div className="msg-err" role="alert">{error}</div>}
-            </form>
-          </div>
-        )}
-      </div>
-
       <button
         type="button"
         className="nav-btn nav-toggle"
@@ -287,7 +229,6 @@ export default function Navbar({ showAnnouncements = false }) {
         aria-controls="nav-menu"
         onClick={() => {
           setMenuOpen((o) => !o);
-          setLoginOpen(false);
         }}
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -300,16 +241,18 @@ export default function Navbar({ showAnnouncements = false }) {
       </button>
     </nav>
 
-    {/* Mobile-only floating dock (hidden on desktop via CSS). Same destinations as the desktop links. */}
-    <nav className="dock" ref={dockRef} aria-label="Quick navigation">
-      {links.map((l) => (
+    {/* Common public tasks; the footer retains links to the full office information. */}
+    <nav className={`dock ${styles.dock}`} ref={dockRef} aria-label="Quick navigation">
+      {dockLinks.map((l) => (
         <a key={l.href} href={l.href} aria-label={l.label} data-label={l.label} aria-current={active === l.href.slice(1) ? "true" : undefined}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             {ICONS[l.icon]}
           </svg>
+          <span className={styles.dockLabel}>{l.label}</span>
         </a>
       ))}
     </nav>
+
     </>
   );
 }

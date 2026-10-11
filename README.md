@@ -1,24 +1,15 @@
-# Municipal Assessor's Office - Polangui, Albay (Phase 1)
+# Municipal Assessor's Office — public website
 
-Next.js (App Router) public website + employee login. Vercel-ready.
+Public informational release for Polangui, Albay. Includes services, official requirements, notices, organizational chart, location and contact details.
 
-## Install
-    npm install
-    cp .env.example .env.local
+The office system continues in the separate local development checkout. This release contains no office pages, employee login, API handlers, database clients, GIS records or migration tooling. Online submissions are unavailable; visitors are directed to contact or visit the office.
 
-## Generate secrets for .env.local
-    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-    node -e "console.log(Buffer.from(require('bcryptjs').hashSync(process.argv[1],10)).toString('base64'))" "YourStrongPassword"
+## Verify locally
 
-First output -> AUTH_SECRET. Second output -> EMPLOYEE_PASSWORD_HASH_B64.
+Use Node.js 24. Run npm ci --ignore-scripts, npm run build, and npm test. For a local preview, use npm run dev. Run only one development server per checkout; stop it before building.
 
-## Run
-    npm run dev      # http://localhost:3000
-    npm run build
-    npm start
+## Deployment
 
-## Deploy
-Add the same variables from .env.example in Vercel: Project Settings -> Environment Variables.
+This public release uses the existing assessors-system Vercel project through its GitHub integration. No database, SMTP or authentication environment variables are required. Do not copy private environment files into this checkout or publish the internal office checkout.
 
-## Content
-Placeholder Mission, Vision, Org Chart and request types live in lib/config.js.
+Tests start a temporary loopback production server after a build and verify public content, PDFs, headers, and refusal of internal/API paths.

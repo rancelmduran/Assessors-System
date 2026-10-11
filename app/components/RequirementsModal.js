@@ -6,7 +6,7 @@ import { requirementItems, pdfUrl } from "../../lib/requirements";
 const FOCUSABLE = "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])";
 
 // "Requirements" button + in-page popup (no navigation, no new tab).
-export default function RequirementsModal() {
+export default function RequirementsModal({ itemId = null, label = "Requirements", buttonClassName = "req-open", wrapperClassName = "req-actions" }) {
   const [open, setOpen] = useState(false);
   const [activeId, setActiveId] = useState(null);
   const triggerRef = useRef(null);
@@ -68,9 +68,9 @@ export default function RequirementsModal() {
 
   return (
     <>
-      <div className="req-actions">
-        <button type="button" className="req-open" ref={triggerRef} onClick={() => setOpen(true)} aria-haspopup="dialog">
-          Requirements
+      <div className={wrapperClassName}>
+        <button type="button" className={buttonClassName} ref={triggerRef} onClick={() => { setActiveId(itemId); setOpen(true); }} aria-haspopup="dialog">
+          {label}
         </button>
       </div>
 

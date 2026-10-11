@@ -1,0 +1,7 @@
+# Preserve the exact reviewed bytes of hash-pinned initialization inputs.
+db/schema.sql -text
+db/migrations/2026-10-s2.6.1-office-accounts.sql -text
+db/migrations/2026-10-s2.8.1-employee-password-hash.sql -text
+db/supabase/roles.sql -text
+db/supabase/runtime-grants.sql -text
+db/supabase/baseline-manifest.json -text

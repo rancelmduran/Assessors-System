@@ -6,9 +6,19 @@ node_modules
 /out
 
 # secrets: never commit real environment files (only .env.example is tracked)
-.env
-.env.local
-.env*.local
+.env*
+!.env.example
+
+# credentials, key material, database dumps, backups and archives must never be committed or shared
+*.pem
+*.key
+*.p12
+*.pfx
+*.dump
+*.pgdump
+*.sql.gz
+*.bak
+*.zip
 
 # Vercel
 .vercel
@@ -21,3 +31,6 @@ Thumbs.db
 next-env.d.ts
 *.tsbuildinfo
 /coverage
+
+# local profile data (Office System profiles / pictures)
+/data
